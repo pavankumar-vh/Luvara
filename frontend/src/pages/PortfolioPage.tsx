@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Download, Activity, FileText, GitCompare, Loader2, Trash2, Users, Atom } from 'lucide-react';
+import { ArrowLeft, Search, Download, Activity, FileText, GitCompare, Loader2, Trash2, Users, Atom, SlidersHorizontal, ArrowUpDown, X, ChevronDown, Microscope, Pill, Bookmark, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { clsx } from 'clsx';
+
+type SortKey = 'date_desc' | 'date_asc' | 'score_desc' | 'score_asc' | 'name_asc';
 
 export default function PortfolioPage() {
   const navigate = useNavigate();
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('date_desc');
+  const [scoreRange, setScoreRange] = useState<[number, number]>([0, 10]);
+  const [selectedIndications, setSelectedIndications] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetch('/api/history', { credentials: 'include' })
@@ -25,9 +31,52 @@ export default function PortfolioPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const filteredReports = reports.filter(r =>
-    r.molecule?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredReports = useMemo(() => {
+    let result = reports.filter(r =>
+      r.molecule?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    // Score range filter
+    result = result.filter(r => {
+      const s = getScore(r) ?? 0;
+      return s >= scoreRange[0] && s <= scoreRange[1];
+    });
+    // Indication filter
+    if (selectedIndications.length > 0) {
+      result = result.filter(r => {
+        const inds = getIndications(r).map(i => i.toLowerCase());
+        return selectedIndications.some(sel => inds.some(ind => ind.includes(sel.toLowerCase())));
+      });
+    }
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'score_desc': return (getScore(b) ?? 0) - (getScore(a) ?? 0);
+        case 'score_asc': return (getScore(a) ?? 0) - (getScore(b) ?? 0);
+        case 'date_asc': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'name_asc': return (a.molecule || '').localeCompare(b.molecule || '');
+        case 'date_desc':
+        default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+    return result;
+  }, [reports, searchQuery, scoreRange, selectedIndications, sortBy]);
+
+  // Collect all unique indications for filter
+  const allIndications = useMemo(() => {
+    const set = new Set<string>();
+    reports.forEach(r => getIndications(r).forEach(ind => { if (ind && ind !== 'Unknown') set.add(ind); }));
+    return Array.from(set).sort();
+  }, [reports]);
+
+  const activeFilterCount = (scoreRange[0] > 0 || scoreRange[1] < 10 ? 1 : 0) + (selectedIndications.length > 0 ? 1 : 0);
+
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'date_desc', label: 'Newest First' },
+    { key: 'date_asc', label: 'Oldest First' },
+    { key: 'score_desc', label: 'Highest Score' },
+    { key: 'score_asc', label: 'Lowest Score' },
+    { key: 'name_asc', label: 'Name A–Z' },
+  ];
 
   const getScore = (r: any) => r.reportData?.phoenix_score ?? r.reportData?.ai_analysis?.viability_score ?? null;
   const getIndications = (r: any): string[] => {
@@ -59,6 +108,15 @@ export default function PortfolioPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => navigate("/biomarker")} className="flex items-center gap-2 px-3.5 py-2 hover:bg-cyan-500/20 text-cyan-400 rounded-full transition-colors border border-cyan-500/30 text-sm font-medium" title="Biomarker Pipeline">
+              <Microscope className="w-4 h-4" /> <span className="hidden lg:inline">Biomarker</span>
+            </button>
+            <button onClick={() => navigate("/interactions")} className="flex items-center gap-2 px-3.5 py-2 hover:bg-amber-500/20 text-amber-400 rounded-full transition-colors border border-amber-500/30 text-sm font-medium" title="Drug Interactions">
+              <Pill className="w-4 h-4" /> <span className="hidden lg:inline">Interactions</span>
+            </button>
+            <button onClick={() => navigate("/collections")} className="flex items-center gap-2 px-3.5 py-2 hover:bg-emerald-500/20 text-emerald-400 rounded-full transition-colors border border-emerald-500/30 text-sm font-medium" title="Collections">
+              <Bookmark className="w-4 h-4" /> <span className="hidden lg:inline">Collections</span>
+            </button>
             <button onClick={() => navigate("/community")} className="flex items-center gap-2 px-3.5 py-2 hover:bg-white/20 text-white rounded-full transition-colors border border-zinc-700 text-sm font-medium">
               <Users className="w-4 h-4" /> Community
             </button>
@@ -70,30 +128,125 @@ export default function PortfolioPage() {
         </header>
 
         <main className="flex-1 w-full px-6 lg:px-12 pb-20 relative z-10 mx-auto max-w-[1600px]">
-          {/* Search & Stats */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-              <input
-                type="text"
-                placeholder="Search molecules..."
-                className="w-full bg-zinc-900/60 border border-zinc-800/60 rounded-xl pl-10 pr-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-2 text-center">
-                <p className="text-xl font-bold text-zinc-100">{reports.length}</p>
-                <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Analyses</p>
+          {/* Search, Sort & Filters */}
+          <div className="flex flex-col gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="relative w-full sm:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search molecules..."
+                  className="w-full bg-zinc-900/60 border border-zinc-800/60 rounded-xl pl-10 pr-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-2 text-center">
-                <p className="text-xl font-bold text-cyan-400">
-                  {reports.filter(r => (getScore(r) ?? 0) >= 7).length}
-                </p>
-                <p className="text-[9px] text-zinc-500 uppercase tracking-wider">High Viability</p>
+              <div className="flex items-center gap-3">
+                {/* Sort dropdown */}
+                <div className="relative group">
+                  <button className="flex items-center gap-2 px-3 py-2 bg-zinc-900/60 border border-zinc-800/60 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all">
+                    <ArrowUpDown size={13} />
+                    {SORT_OPTIONS.find(s => s.key === sortBy)?.label}
+                    <ChevronDown size={11} />
+                  </button>
+                  <div className="absolute right-0 top-full mt-1 w-44 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-30 shadow-2xl shadow-black/60 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    {SORT_OPTIONS.map(opt => (
+                      <button key={opt.key} onClick={() => setSortBy(opt.key)}
+                        className={clsx("w-full text-left px-4 py-2.5 text-xs transition-colors border-b border-zinc-800/40 last:border-0",
+                          sortBy === opt.key ? "text-cyan-400 bg-cyan-500/5" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                        )}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Filter toggle */}
+                <button onClick={() => setShowFilters(v => !v)}
+                  className={clsx("flex items-center gap-2 px-3 py-2 border rounded-lg text-xs transition-all",
+                    showFilters || activeFilterCount > 0
+                      ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+                      : "bg-zinc-900/60 border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                  )}>
+                  <SlidersHorizontal size={13} />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-cyan-500 text-black text-[9px] font-bold flex items-center justify-center">{activeFilterCount}</span>
+                  )}
+                </button>
+
+                {/* Stats */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-2 text-center">
+                    <p className="text-xl font-bold text-zinc-100">{reports.length}</p>
+                    <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Analyses</p>
+                  </div>
+                  <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-2 text-center">
+                    <p className="text-xl font-bold text-cyan-400">
+                      {reports.filter(r => (getScore(r) ?? 0) >= 7).length}
+                    </p>
+                    <p className="text-[9px] text-zinc-500 uppercase tracking-wider">High Viability</p>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Expanded Filters */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-5 flex flex-col md:flex-row gap-6">
+                    {/* Score Range */}
+                    <div className="flex-1">
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-3 block">Phoenix Score Range</label>
+                      <div className="flex items-center gap-3">
+                        <input type="range" min={0} max={10} step={0.5} value={scoreRange[0]}
+                          onChange={(e) => setScoreRange([Math.min(Number(e.target.value), scoreRange[1]), scoreRange[1]])}
+                          className="flex-1 accent-cyan-500 h-1" />
+                        <span className="text-xs text-zinc-300 font-mono w-8 text-center">{scoreRange[0]}</span>
+                        <span className="text-xs text-zinc-600">–</span>
+                        <span className="text-xs text-zinc-300 font-mono w-8 text-center">{scoreRange[1]}</span>
+                        <input type="range" min={0} max={10} step={0.5} value={scoreRange[1]}
+                          onChange={(e) => setScoreRange([scoreRange[0], Math.max(Number(e.target.value), scoreRange[0])])}
+                          className="flex-1 accent-cyan-500 h-1" />
+                      </div>
+                    </div>
+
+                    {/* Indication Filter */}
+                    <div className="flex-1">
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-3 block">Indications</label>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                        {allIndications.slice(0, 20).map(ind => (
+                          <button key={ind} onClick={() => setSelectedIndications(prev => prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind])}
+                            className={clsx("text-[10px] px-2.5 py-1 rounded-full border transition-all",
+                              selectedIndications.includes(ind)
+                                ? "bg-cyan-500/20 border-cyan-500/30 text-cyan-300"
+                                : "bg-zinc-950/40 border-zinc-800/60 text-zinc-400 hover:border-zinc-700"
+                            )}>
+                            {ind}
+                          </button>
+                        ))}
+                        {allIndications.length === 0 && <span className="text-xs text-zinc-600">No indications found in reports</span>}
+                      </div>
+                    </div>
+
+                    {/* Clear */}
+                    <div className="flex items-end">
+                      <button onClick={() => { setScoreRange([0, 10]); setSelectedIndications([]); }}
+                        className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors px-3 py-1.5 border border-zinc-800/60 rounded-lg hover:border-zinc-700">
+                        <X size={10} /> Clear All
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Loading */}

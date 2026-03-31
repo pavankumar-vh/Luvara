@@ -4,7 +4,7 @@ import {
   Search, Activity, FileText, Sparkles, BrainCircuit, Send,
   ChevronRight, ArrowRight, CheckCircle, Database, FlaskConical,
   TrendingUp, Shield, Microscope, Network, Bot, Gavel,
-  BookOpen, TestTube, BarChart3, Check, Zap, Menu, X,
+  BookOpen, TestTube, BarChart3, Check, Zap, Menu, X, ChevronDown, Star,
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -117,6 +117,27 @@ const DATA_SOURCES = [
   { name: 'Open Targets',       desc: 'Disease–target associations',       color: 'text-rose-500 dark:text-rose-400'    },
   { name: 'openFDA',            desc: 'Drug approvals & adverse events',   color: 'text-cyan-500 dark:text-cyan-400'    },
   { name: 'NCBI / PubMed',      desc: 'Biomedical research database',      color: 'text-cyan-500 dark:text-cyan-400'},
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "This platform cut our preliminary drug screening time from weeks to minutes. The Phoenix Score gives us confidence to prioritize candidates.",
+    name: "Dr. Priya Sharma",
+    role: "Senior Research Scientist",
+    org: "Biotech Startup, Bangalore",
+  },
+  {
+    quote: "The multi-agent architecture is brilliant. Having 8 specialized AI agents simultaneously query real databases gives us data density we can't get anywhere else.",
+    name: "James Chen",
+    role: "Computational Pharmacologist",
+    org: "University Research Lab",
+  },
+  {
+    quote: "We use the Compare feature daily. Being able to benchmark two compounds head-to-head with real clinical and patent data is a game changer for our pipeline decisions.",
+    name: "Dr. Ananya Patel",
+    role: "VP of Drug Discovery",
+    org: "Pharmaceutical R&D",
+  },
 ];
 
 const REPORT_TABS = [
@@ -355,6 +376,29 @@ export default function LandingPage() {
           <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-zinc-900 dark:hover:text-zinc-200">FEATURES</button>
           <button onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-zinc-900 dark:hover:text-zinc-200">PLANS</button>
           <button onClick={() => navigate("/compare")} className="hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center gap-1">COMPARE</button>
+          <div className="relative group">
+            <button className="hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center gap-1">TOOLS <ChevronDown size={10} /></button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200 dark:border-zinc-700/60 rounded-xl p-2 min-w-[200px] shadow-2xl">
+                <button onClick={() => navigate("/biomarker")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 text-left transition-colors">
+                  <Microscope size={14} className="text-cyan-500" />
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 normal-case tracking-normal font-medium">Biomarker Pipeline</span>
+                </button>
+                <button onClick={() => navigate("/interactions")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 text-left transition-colors">
+                  <Zap size={14} className="text-amber-500" />
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 normal-case tracking-normal font-medium">Drug Interactions</span>
+                </button>
+                <button onClick={() => navigate("/collections")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 text-left transition-colors">
+                  <FlaskConical size={14} className="text-emerald-500" />
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 normal-case tracking-normal font-medium">Collections</span>
+                </button>
+                <button onClick={() => navigate("/gallery")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 text-left transition-colors">
+                  <Database size={14} className="text-rose-500" />
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 normal-case tracking-normal font-medium">Report Gallery</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-4">
@@ -406,6 +450,11 @@ export default function LandingPage() {
               <button onClick={() => { navigate("/"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest">HOME</button>
               <button onClick={() => { document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest">FEATURES</button>
               <button onClick={() => { document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest">PLANS</button>
+              <div className="w-full border-t border-zinc-200 dark:border-zinc-800 my-1" />
+              <button onClick={() => { navigate("/biomarker"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest flex items-center justify-center gap-2"><Microscope size={14} /> BIOMARKER</button>
+              <button onClick={() => { navigate("/interactions"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest flex items-center justify-center gap-2"><Zap size={14} /> INTERACTIONS</button>
+              <button onClick={() => { navigate("/collections"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest flex items-center justify-center gap-2"><FlaskConical size={14} /> COLLECTIONS</button>
+              <button onClick={() => { navigate("/gallery"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest flex items-center justify-center gap-2"><Database size={14} /> GALLERY</button>
               {!user && (
                 <button onClick={() => { navigate("/login"); setMobileMenuOpen(false); }} className="w-full py-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest sm:hidden">LOG IN</button>
               )}
@@ -417,6 +466,12 @@ export default function LandingPage() {
 
       {/* Fixed background grid */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(0,0,0,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.025)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none [mask-image:radial-gradient(ellipse_90%_70%_at_50%_30%,#000_10%,transparent_100%)]" />
+
+      {/* Ambient hero glow orbs */}
+      <div className="fixed top-[-10%] left-[15%] w-[500px] h-[500px] bg-blue-500/[0.04] dark:bg-cyan-500/[0.06] rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-[10%] right-[10%] w-[400px] h-[400px] bg-violet-500/[0.03] dark:bg-violet-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
+
+      <style>{`@keyframes gradient { 0%,100% { background-position: 0% center; } 50% { background-position: 100% center; } }`}</style>
 
       {/* Navigation transition overlay */}
       <AnimatePresence>
@@ -449,10 +504,18 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="flex flex-col items-center text-center max-w-3xl pointer-events-auto"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-medium tracking-wide mb-8 shadow-sm">
-              <Sparkles size={13} className="text-blue-500 dark:text-zinc-400" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-500 dark:text-zinc-400 text-xs font-semibold tracking-wide mb-8 shadow-lg shadow-zinc-200/20 dark:shadow-black/30"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
               NEXT-GEN DISCOVERY ENGINE
-            </div>
+            </motion.div>
 
             <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-[84px] font-bold tracking-tighter leading-[1.05] mb-5 sm:mb-7">
               <TypewriterHero
@@ -461,7 +524,7 @@ export default function LandingPage() {
                 className="text-zinc-900 dark:text-white"
               />
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-blue-600 to-cyan-700 dark:from-zinc-200 dark:to-zinc-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-500 dark:from-cyan-300 dark:via-blue-400 dark:to-violet-400 animate-[gradient_6s_ease_infinite] bg-[length:200%_auto]">
                 Research Platform
               </span>
             </h1>
@@ -537,18 +600,109 @@ export default function LandingPage() {
       </section>
 
       {/* ─── STATS BAR ────────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-8 sm:py-10 border-y border-zinc-200 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-900/20 backdrop-blur-sm">
+      <section className="relative z-10 py-10 sm:py-14 border-y border-zinc-200 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-900/20 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             {STATS.map((s, i) => (
-              <AnimatedCounter
-                key={i}
-                target={s.value}
-                suffix={s.suffix}
-                label={s.label}
-                duration={2.5}
-                decimals={(s as any).decimals || 0}
-              />
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 dark:from-cyan-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+                <AnimatedCounter
+                  key={i}
+                  target={s.value}
+                  suffix={s.suffix}
+                  label={s.label}
+                  duration={2.5}
+                  decimals={(s as any).decimals || 0}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── ADVANCED RESEARCH TOOLS ──────────────────────────────────────── */}
+      <section className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 relative z-10 border-b border-zinc-100 dark:border-zinc-800/40">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-6">
+              <Zap size={12} className="text-amber-500" />
+              ADVANCED TOOLKIT
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-zinc-900 dark:text-white tracking-tight">
+              Beyond Standard Analysis
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg font-light max-w-2xl mx-auto">
+              Four specialized research tools that go deeper than any standard drug database.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[
+              {
+                icon: <Microscope className="w-6 h-6" />,
+                title: 'Biomarker → Drug Pipeline',
+                desc: 'Reverse drug discovery. Enter a gene target like EGFR or BRCA1 and discover every drug that modulates it — with clinical phase tracking, mechanism grouping, and pipeline scoring.',
+                tag: 'Open Targets Integration',
+                tagColor: 'text-cyan-500',
+                link: '/biomarker',
+              },
+              {
+                icon: <Zap className="w-6 h-6" />,
+                title: 'Drug-Drug Interaction Matrix',
+                desc: 'Check up to 6 drugs simultaneously. AI analyzes every unique pair for severity, mechanism, and clinical effect — with a visual interaction matrix and evidence levels.',
+                tag: 'Multi-Drug Support',
+                tagColor: 'text-amber-500',
+                link: '/interactions',
+              },
+              {
+                icon: <FlaskConical className="w-6 h-6" />,
+                title: 'Research Collections',
+                desc: 'Organize your bookmarked molecules into named folders. Add annotations, filter by score, bulk manage, and export your curated research library.',
+                tag: 'Smart Organization',
+                tagColor: 'text-emerald-500',
+                link: '/collections',
+              },
+              {
+                icon: <Database className="w-6 h-6" />,
+                title: 'Public Report Gallery',
+                desc: 'Explore community-shared drug repurposing analyses. Filter by indication, sort by Phoenix Score, and discover high-scoring repurposing opportunities.',
+                tag: 'Community Discovery',
+                tagColor: 'text-rose-500',
+                link: '/gallery',
+              },
+            ].map((tool, i) => (
+              <motion.div
+                key={tool.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={{ once: true }}
+                onClick={() => navigate(user ? tool.link : '/login')}
+                className="relative group bg-white/70 dark:bg-[#0a0a0b]/70 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300 cursor-pointer overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl group-hover:scale-110 transition-transform duration-300 text-zinc-600 dark:text-zinc-300 shrink-0">
+                    {tool.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-base sm:text-lg font-bold text-zinc-800 dark:text-zinc-100 tracking-tight">{tool.title}</h3>
+                    </div>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${tool.tagColor} mb-3 block`}>{tool.tag}</span>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{tool.desc}</p>
+                  </div>
+                </div>
+                <div className="absolute bottom-4 right-4 text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArrowRight size={16} />
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -820,6 +974,156 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── TESTIMONIALS ─────────────────────────────────────────────── */}
+      <section className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 relative z-10 border-t border-zinc-100 dark:border-zinc-800/40">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-6">
+              <Sparkles size={12} className="text-emerald-500" />
+              TRUSTED BY RESEARCHERS
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-zinc-900 dark:text-white tracking-tight">
+              What Researchers Say
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg font-light max-w-xl mx-auto">
+              Built for researchers, by researchers. Here's what early users think.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="relative bg-white/70 dark:bg-[#0a0a0b]/70 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300"
+              >
+                <div className="absolute top-6 right-6 text-5xl font-serif text-zinc-100 dark:text-zinc-800 leading-none select-none">"</div>
+                <div className="flex items-center gap-0.5 mb-4">
+                  {[...Array(5)].map((_, s) => <Star key={s} size={12} className="text-amber-400 fill-amber-400" />)}
+                </div>
+                <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-6 relative z-10 font-medium">
+                  "{t.quote}"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-cyan-500/20">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{t.name}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{t.role} · {t.org}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── LIVE DEMO PREVIEW ─────────────────────────────────────────── */}
+      <section className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 relative z-10 border-t border-zinc-100 dark:border-zinc-800/40 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-6">
+              <FlaskConical size={12} className="text-cyan-500" />
+              SEE IT IN ACTION
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-zinc-900 dark:text-white tracking-tight">
+              From Search to Insight
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg font-light max-w-xl mx-auto">
+              Watch how a single molecule query becomes a comprehensive repurposing intelligence report.
+            </p>
+          </motion.div>
+
+          {/* Mock Report Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="relative mx-auto max-w-4xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent rounded-3xl pointer-events-none" />
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-zinc-200/30 dark:shadow-black/30">
+              {/* Mock header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 flex items-center justify-center">
+                    <FlaskConical size={20} className="text-cyan-600 dark:text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100 tracking-tight">Metformin</h3>
+                    <p className="text-xs text-zinc-500">Analysis Report · Phoenix Score: 8.4/10</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full">High Viability</span>
+                </div>
+              </div>
+
+              {/* Mock metrics grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                {[
+                  { label: 'Clinical Trials', value: '247', color: 'text-blue-600 dark:text-blue-400' },
+                  { label: 'Publications', value: '1,842', color: 'text-emerald-600 dark:text-emerald-400' },
+                  { label: 'Patents', value: '38', color: 'text-amber-600 dark:text-amber-400' },
+                  { label: 'Indications', value: '12', color: 'text-cyan-600 dark:text-cyan-400' },
+                ].map((m, i) => (
+                  <div key={i} className="bg-zinc-50 dark:bg-zinc-800/40 rounded-xl p-4 text-center">
+                    <p className={`text-2xl font-bold ${m.color}`}>{m.value}</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider mt-1">{m.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mock top candidates */}
+              <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl p-5 border border-zinc-100 dark:border-zinc-800/60">
+                <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-3">Top Repurposing Candidates</h4>
+                <div className="space-y-2.5">
+                  {[
+                    { name: 'Non-small-cell Lung Cancer', score: 8.2, phase: 'Phase III' },
+                    { name: 'Breast Cancer', score: 7.8, phase: 'Phase II' },
+                    { name: 'Polycystic Ovary Syndrome', score: 7.5, phase: 'Phase III' },
+                  ].map((c, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-zinc-400 w-5">{i + 1}.</span>
+                        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">{c.name}</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-zinc-200/60 dark:bg-zinc-700/60 text-zinc-600 dark:text-zinc-400 rounded-full">{c.phase}</span>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{c.score}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA overlay */}
+              <div className="mt-6 flex justify-center">
+                <button onClick={handleStartAnalysis}
+                  className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-semibold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all flex items-center gap-2">
+                  Try it yourself <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ─── PRICING ──────────────────────────────────────────────────────── */}
         <section id="plans" className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 relative z-10 border-t border-zinc-100 dark:border-zinc-800/40 bg-zinc-50/50 dark:bg-zinc-900/10">
         <div className="max-w-6xl mx-auto">
@@ -918,8 +1222,9 @@ export default function LandingPage() {
             <CheckCircle size={12} className="text-emerald-500" />
             No setup required
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-zinc-900 dark:text-white tracking-tight mb-6 leading-tight">
-            Start your first<br />analysis today
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
+            <span className="text-zinc-900 dark:text-white">Start your first</span><br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500">analysis today</span>
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-lg font-light mb-10 max-w-lg mx-auto leading-relaxed">
             Enter any compound name and let our multi-agent system deliver a complete repurposing intelligence report.
@@ -931,15 +1236,51 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800/40 py-8 sm:py-10 px-4 sm:px-6 relative z-10">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 tracking-tight">
-            <Sparkles size={14} className="text-blue-500 dark:text-zinc-500" />
-            Origin
+      <footer className="border-t border-zinc-200 dark:border-zinc-800/40 py-8 sm:py-12 px-4 sm:px-6 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 tracking-tight mb-2">
+                <Sparkles size={14} className="text-blue-500 dark:text-zinc-500" />
+                Origin
+              </div>
+              <p className="text-xs text-zinc-400 dark:text-zinc-600 max-w-xs leading-relaxed">
+                Autonomous drug repurposing intelligence platform. Powered by multi-agent AI with 8 specialized research agents.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-xs">
+              <div>
+                <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider text-[10px]">Product</h4>
+                <div className="space-y-2">
+                  <button onClick={() => navigate('/search')} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Search</button>
+                  <button onClick={() => navigate('/compare')} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Compare</button>
+                  <button onClick={() => navigate('/community')} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Community</button>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider text-[10px]">Resources</h4>
+                <div className="space-y-2">
+                  <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">How it Works</button>
+                  <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Features</button>
+                  <button onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })} className="block text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Pricing</button>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider text-[10px]">Tip</h4>
+                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Press <kbd className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded text-[10px] font-mono">⌘K</kbd> anywhere for quick navigation.
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-zinc-400 dark:text-zinc-600">
-            Autonomous drug repurposing intelligence platform.
-          </p>
+          <div className="border-t border-zinc-200 dark:border-zinc-800/40 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-zinc-400 dark:text-zinc-600">
+              © {new Date().getFullYear()} Origin. All rights reserved.
+            </p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600">
+              Built with multi-agent AI.
+            </p>
+          </div>
         </div>
       </footer>
 

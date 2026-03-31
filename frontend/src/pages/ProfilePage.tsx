@@ -1,12 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Camera, Lock, Eye, EyeOff, CheckCircle2, Shield, Activity, Database, Sparkles, Zap, Crown, Check, X, HelpCircle, ChevronDown, Star } from 'lucide-react';
+import { ArrowLeft, Camera, Lock, Eye, EyeOff, CheckCircle2, Shield, Activity, Database, Sparkles, Zap, Crown, Check, X, HelpCircle, ChevronDown, Star, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRazorpay } from 'react-razorpay';
+import toast, { Toaster } from 'react-hot-toast';
+
+const TOAST_STYLE = { background: '#18181b', color: '#fff', border: '1px solid #27272a' };
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -100,6 +103,7 @@ export function ProfilePage() {
       await updateProfile(updates);
       setAvatarData(null);
       setProfileSuccess(true);
+      toast.success('Profile updated successfully', { style: TOAST_STYLE });
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: any) {
       setProfileError(err.message || 'Failed to update profile');
@@ -129,6 +133,7 @@ export function ProfilePage() {
       setNewPassword('');
       setConfirmPassword('');
       setPasswordSuccess(true);
+      toast.success('Password updated successfully', { style: TOAST_STYLE });
       setTimeout(() => setPasswordSuccess(false), 3000);
     } catch (err: any) {
       setPasswordError(err.message || 'Failed to update password');
@@ -139,23 +144,25 @@ export function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-black text-zinc-200 font-sans selection:bg-zinc-800 relative overflow-hidden">
+      <Toaster position="bottom-right" />
+      
+      {/* Background grid */}
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none [mask-image:radial-gradient(ellipse_90%_60%_at_50%_0%,#000_20%,transparent_100%)]" />
       
       {/* Liquid Glass Background Accents */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-50">
-        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-indigo-900/10 rounded-full blur-[140px] mix-blend-screen" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[30rem] h-[30rem] bg-zinc-600/10 rounded-full blur-[120px] mix-blend-screen" />
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-indigo-500/[0.06] rounded-full blur-[140px]" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[30rem] h-[30rem] bg-violet-500/[0.05] rounded-full blur-[120px]" />
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 px-6 py-4 flex items-center gap-4 bg-black/80 backdrop-blur-xl border-b border-zinc-900">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+      <header className="sticky top-0 z-50 px-6 py-4 flex items-center gap-4 bg-black/80 backdrop-blur-xl border-b border-zinc-800/60">
+        <button 
           onClick={() => navigate(-1)}
-          className="rounded-full hover:bg-zinc-900 text-zinc-400 hover:text-white"
+          className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group"
         >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+        </button>
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-white">Account Settings</h1>
         </div>
@@ -220,19 +227,32 @@ export function ProfilePage() {
             </div>
             
             <div className="mt-5 space-y-3">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 group hover:border-zinc-700/60 transition-all">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-zinc-400" />
+                  <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                  </div>
                   <span className="text-xs text-zinc-300">Analysis Runs</span>
                 </div>
-                <span className="font-semibold text-white text-sm">{analysisRuns}</span>
+                <span className="font-bold text-white text-sm font-mono">{analysisRuns}</span>
               </div>
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 group hover:border-zinc-700/60 transition-all">
                 <div className="flex items-center gap-2">
-                  <Database className="w-3.5 h-3.5 text-zinc-400" />
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
                   <span className="text-xs text-zinc-300">Reports Generated</span>
                 </div>
-                <span className="font-semibold text-white text-sm">{reportsGenerated}</span>
+                <span className="font-bold text-white text-sm font-mono">{reportsGenerated}</span>
+              </div>
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 group hover:border-zinc-700/60 transition-all">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-violet-400" />
+                  </div>
+                  <span className="text-xs text-zinc-300">Member Since</span>
+                </div>
+                <span className="font-semibold text-white text-xs font-mono">{user?.createdAt ? new Date(user.createdAt as string).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}</span>
               </div>
             </div>
           </motion.div>
@@ -292,12 +312,12 @@ export function ProfilePage() {
         {/* Right column: Forms / Plans */}
         <div className="w-full lg:flex-1 flex flex-col gap-5">
           {/* Tab Switcher */}
-          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800/60 w-fit">
+          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800/60 w-fit backdrop-blur-sm">
             <button
               onClick={() => setSearchParams({})}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                 activeTab === 'profile'
-                  ? 'bg-white text-black shadow-md'
+                  ? 'bg-gradient-to-r from-white to-zinc-100 text-black shadow-md'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
             >
@@ -307,7 +327,7 @@ export function ProfilePage() {
               onClick={() => setSearchParams({ tab: 'settings' })}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                 activeTab === 'settings'
-                  ? 'bg-white text-black shadow-md'
+                  ? 'bg-gradient-to-r from-white to-zinc-100 text-black shadow-md'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
             >
@@ -374,7 +394,7 @@ export function ProfilePage() {
                 <Button 
                   type="submit" 
                   disabled={profileLoading || (name === user?.name && email === user?.email && !avatarData)}
-                  className="bg-white text-black hover:bg-zinc-200 h-10 px-6 font-semibold rounded-lg"
+                  className="bg-gradient-to-r from-white to-zinc-100 text-black hover:from-zinc-200 hover:to-zinc-100 h-10 px-6 font-semibold rounded-lg shadow-md transition-all"
                 >
                   {profileLoading ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -457,10 +477,10 @@ export function ProfilePage() {
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <Button 
+                    <Button 
                     type="submit" 
                     disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
-                    className="bg-white text-black hover:bg-zinc-200 h-10 px-6 font-semibold rounded-lg"
+                    className="bg-gradient-to-r from-white to-zinc-100 text-black hover:from-zinc-200 hover:to-zinc-100 h-10 px-6 font-semibold rounded-lg shadow-md transition-all"
                   >
                     {passwordLoading ? 'Updating...' : 'Update Password'}
                   </Button>

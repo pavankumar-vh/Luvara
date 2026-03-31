@@ -971,6 +971,207 @@ AI Viability Score: ${resultState.viabilityScore}/10`;
     }
   });
 
+  // ─── Biomarker → Drug Pipeline ───────────────────────────────────────
+  app.get('/api/biomarker-search', async (req, res) => {
+    const gene = (req.query.gene as string || '').trim().toUpperCase();
+    const limit = Math.min(parseInt(req.query.limit as string || '30', 10) || 30, 100);
+    if (!gene) return res.status(400).json({ error: 'gene query param required' });
+
+    try {
+      // Query Open Targets Platform GraphQL API for drugs targeting a gene
+      const gqlQuery = `query { search(queryString: "${gene}", entityNames: ["target"], page: { size: 1, index: 0 }) { hits { id } } }`;
+      const searchRes = await fetch('https://api.platform.opentargets.org/api/v4/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: gqlQuery }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const searchData = await searchRes.json() as any;
+      const targetId = searchData?.data?.search?.hits?.[0]?.id;
+      if (!targetId) return res.json({ gene, gene_info: null, drugs: [] });
+
+      // Get gene info + known drugs for this target
+      const drugQuery = `query { target(ensemblId: "${targetId}") { approvedSymbol biotype functionDescriptions drugAndClinicalCandidates { count rows { drug { id name mechanismsOfAction { rows { mechanismOfAction } } } maxClinicalStage diseases { diseaseFromSource } } } } }`;
+      const drugRes = await fetch('https://api.platform.opentargets.org/api/v4/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: drugQuery }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const drugData = await drugRes.json() as any;
+      const target = drugData?.data?.target;
+      const rows = target?.drugAndClinicalCandidates?.rows || [];
+
+      // Map clinical stage string to numeric phase
+      const phaseMap: Record<string, number> = { 'Phase I': 1, 'Phase II': 2, 'Phase III': 3, 'Phase IV': 4, 'Approved': 4 };
+
+      // Deduplicate by drug name and score
+      const seen = new Set<string>();
+      const drugs = rows
+        .filter((r: any) => {
+          const key = (r.drug?.name || '').toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map((r: any) => {
+          const phase = phaseMap[r.maxClinicalStage] ?? 0;
+          return {
+            drug_name: r.drug?.name || 'Unknown',
+            mechanism: r.drug?.mechanismsOfAction?.rows?.[0]?.mechanismOfAction || '',
+            max_phase: phase,
+            disease: r.diseases?.[0]?.diseaseFromSource || '',
+            score: Math.min(10, phase * 2 + (phase >= 4 ? 2 : 0)),
+          };
+        })
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, limit);
+
+      const geneInfo = target ? {
+        symbol: target.approvedSymbol,
+        biotype: target.biotype,
+        description: target.functionDescriptions?.[0] || '',
+        total_drugs: target.drugAndClinicalCandidates?.count || rows.length,
+      } : null;
+
+      res.json({ gene, gene_info: geneInfo, drugs });
+    } catch (e: any) {
+      console.error('[BiomarkerSearch]', e.message);
+      res.status(500).json({ error: 'Biomarker search failed' });
+    }
+  });
+
+  // ─── Drug-Drug Interaction Checker ─────────────────────────────────────
+  app.post('/api/interactions', async (req, res) => {
+    const { drug1, drug2 } = req.body;
+    if (!drug1 || !drug2) return res.status(400).json({ error: 'drug1 and drug2 required' });
+
+    const keys = getGroqKeys('chat');
+    if (keys.length === 0) return res.status(500).json({ error: 'GROQ_API_KEYS not configured' });
+
+    const prompt = `You are a clinical pharmacology expert. Analyze the potential drug-drug interaction between "${drug1}" and "${drug2}".
+
+Return a JSON object with these exact keys:
+{
+  "severity": "none" | "mild" | "moderate" | "severe",
+  "summary": "Brief 1-2 sentence summary of the interaction",
+  "mechanism": "Pharmacological mechanism of interaction",
+  "clinical_effect": "Clinical effect on patients",
+  "recommendation": "Clinical recommendation",
+  "evidence_level": "strong" | "moderate" | "limited" | "theoretical"
+}`;
+
+    let lastError = null;
+    for (const key of keys) {
+      try {
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(30000),
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: 'Respond only with valid JSON. No text outside the JSON object.' },
+              { role: 'user', content: prompt },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.1,
+          }),
+        });
+        if (groqRes.status === 429 || groqRes.status === 401) continue;
+        if (!groqRes.ok) { lastError = await groqRes.text(); continue; }
+        const data = await groqRes.json() as any;
+        const parsed = JSON.parse(data.choices[0].message.content);
+        return res.json(parsed);
+      } catch (e: any) {
+        lastError = e.message;
+      }
+    }
+    res.status(500).json({ error: 'All Groq keys failed', details: lastError });
+  });
+
+  // ─── Collections / Watchlist ───────────────────────────────────────────
+  // Simple in-memory + DB store for user collections
+  app.get('/api/collections', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    try {
+      const userId = (req.user as any)._id;
+      const jobs = await Job.find({ userId, status: 'completed' }).select('molecule reportData.phoenix_score createdAt').lean();
+      // Return user's saved collection from a special flag
+      const saved = await Job.find({ userId, status: 'completed', 'reportData.bookmarked': true })
+        .select('molecule reportData.phoenix_score reportData.bookmarked createdAt')
+        .sort({ createdAt: -1 })
+        .lean();
+      res.json(saved.map((j: any) => ({
+        id: j._id,
+        molecule: j.molecule,
+        phoenix_score: j.reportData?.phoenix_score,
+        created_at: j.createdAt,
+      })));
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post('/api/collections/:reportId/bookmark', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    try {
+      const job = await Job.findById(req.params.reportId);
+      if (!job) return res.status(404).json({ error: 'Report not found' });
+      const current = job.reportData?.bookmarked || false;
+      job.reportData = { ...job.reportData, bookmarked: !current };
+      job.markModified('reportData');
+      await job.save();
+      // Also update in-memory
+      const memReport = reports.get(req.params.reportId);
+      if (memReport) memReport.bookmarked = !current;
+      res.json({ bookmarked: !current });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ─── Public Report Gallery ─────────────────────────────────────────────
+  app.get('/api/gallery', async (req, res) => {
+    try {
+      const page = Math.max(1, parseInt(req.query.page as string || '1', 10) || 1);
+      const limit = Math.min(parseInt(req.query.limit as string || '50', 10) || 50, 100);
+      const sortField = (req.query.sort as string) === 'score' ? 'reportData.phoenix_score' : 'createdAt';
+      const sortDir = (req.query.order as string) === 'asc' ? 1 : -1;
+
+      const filter: any = {
+        status: 'completed',
+        shareToken: { $exists: true, $ne: null },
+      };
+
+      // Optional search
+      const search = (req.query.search as string || '').trim();
+      if (search) {
+        filter.molecule = { $regex: search, $options: 'i' };
+      }
+
+      const total = await Job.countDocuments(filter);
+      const shared = await Job.find(filter)
+        .select('molecule reportData.phoenix_score reportData.ai_analysis.executive_summary reportData.repurposing_candidates shareToken createdAt')
+        .sort({ [sortField]: sortDir })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      res.json(shared.map((j: any) => ({
+        id: j._id,
+        molecule: j.molecule,
+        phoenix_score: j.reportData?.phoenix_score,
+        summary: j.reportData?.ai_analysis?.executive_summary?.slice(0, 200) || '',
+        top_candidates: (j.reportData?.repurposing_candidates || []).slice(0, 3).map((c: any) => c.condition),
+        share_token: j.shareToken,
+        created_at: j.createdAt,
+      })));
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Vite middleware for development
   
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUp, Sparkles, LayoutGrid, Command, Search as SearchIcon, Shield, TrendingUp, Menu, X, History, ChevronRight, FileText, Database, Activity, GitCompare, Mic } from "lucide-react";
+import { ArrowUp, Sparkles, LayoutGrid, Command, Search as SearchIcon, Shield, TrendingUp, Menu, X, History, ChevronRight, FileText, Database, Activity, GitCompare, Mic, Microscope, Pill, Bookmark, Globe, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { LiquidBackground } from "@/components/LiquidBackground";
 import { ShaderButton } from "@/components/ui/ShaderButton";
@@ -209,6 +209,29 @@ export default function SearchPage() {
         <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
           <button onClick={() => navigate("/")} className="hover:text-zinc-200">HOME</button>
           <button onClick={() => navigate("/community")} className="hover:text-zinc-200">COMMUNITY</button>
+          <div className="relative group">
+            <button className="hover:text-zinc-200 flex items-center gap-1">TOOLS <ChevronDown size={10} /></button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-xl p-2 min-w-[200px] shadow-2xl">
+                <button onClick={() => navigate("/biomarker")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 text-left transition-colors">
+                  <Microscope size={14} className="text-cyan-400" />
+                  <span className="text-xs text-zinc-300 normal-case tracking-normal font-medium">Biomarker Pipeline</span>
+                </button>
+                <button onClick={() => navigate("/interactions")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 text-left transition-colors">
+                  <Pill size={14} className="text-amber-400" />
+                  <span className="text-xs text-zinc-300 normal-case tracking-normal font-medium">Drug Interactions</span>
+                </button>
+                <button onClick={() => navigate("/collections")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 text-left transition-colors">
+                  <Bookmark size={14} className="text-emerald-400" />
+                  <span className="text-xs text-zinc-300 normal-case tracking-normal font-medium">Collections</span>
+                </button>
+                <button onClick={() => navigate("/gallery")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 text-left transition-colors">
+                  <Globe size={14} className="text-rose-400" />
+                  <span className="text-xs text-zinc-300 normal-case tracking-normal font-medium">Report Gallery</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </nav>
         
         <div className="w-24 hidden md:block" />
@@ -352,6 +375,20 @@ export default function SearchPage() {
       {/* Floating Bottom Right Nav/Support */}
       <div className="absolute bottom-6 right-6 flex items-center gap-3 z-50">
         <button 
+          onClick={() => navigate("/biomarker")}
+          className="w-12 h-12 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-xl flex items-center justify-center text-cyan-400 hover:text-cyan-300 backdrop-blur-md transition-colors border border-cyan-500/20"
+          title="Biomarker Pipeline"
+        >
+          <Microscope size={20} />
+        </button>
+        <button 
+          onClick={() => navigate("/interactions")}
+          className="w-12 h-12 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 hover:text-amber-300 backdrop-blur-md transition-colors border border-amber-500/20"
+          title="Drug Interactions"
+        >
+          <Pill size={20} />
+        </button>
+        <button 
           onClick={() => navigate("/compare")}
           className="w-12 h-12 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 hover:text-indigo-300 backdrop-blur-md transition-colors border border-indigo-500/20"
           title="Compare two drugs"
@@ -361,6 +398,7 @@ export default function SearchPage() {
         <button 
           onClick={() => navigate("/community")}
           className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white backdrop-blur-md transition-colors border border-white/10"
+          title="Community"
         >
           <LayoutGrid size={20} />
         </button>

@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/theme-provider';
 import { ModeToggle } from './components/mode-toggle';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { CommandPalette } from './components/CommandPalette';
 
 // Lazy load pages to speed up initial Vite hot start
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -18,6 +19,10 @@ const SignupPage = lazy(() => import('./pages/SignupPage').then(m => ({ default:
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const ComparePage = lazy(() => import('./pages/ComparePage'));
 const SharedReportPage = lazy(() => import('./pages/SharedReportPage'));
+const BiomarkerPage = lazy(() => import('./pages/BiomarkerPage'));
+const InteractionPage = lazy(() => import('./pages/InteractionPage'));
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 
 // A simple fallback for Suspense
 const PageLoader = () => (
@@ -37,6 +42,7 @@ export default function App() {
             <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[500px] bg-primary/10 blur-[100px] rounded-full pointer-events-none z-0" />
 
             <ModeToggle />
+            <CommandPalette />
 
             <main className="flex-1 flex flex-col relative z-10">
               <Suspense fallback={<PageLoader />}>
@@ -115,6 +121,31 @@ export default function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route
+                    path="/biomarker"
+                    element={
+                      <ProtectedRoute>
+                        <BiomarkerPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/interactions"
+                    element={
+                      <ProtectedRoute>
+                        <InteractionPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/collections"
+                    element={
+                      <ProtectedRoute>
+                        <CollectionsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/gallery" element={<GalleryPage />} />
                 </Routes>
               </Suspense>
             </main>

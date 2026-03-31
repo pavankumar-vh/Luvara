@@ -7,10 +7,16 @@ import { Job } from '../models/Job';
 
 const router = Router();
 
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let razorpayInstance: Razorpay | null = null;
+function getRazorpay(): Razorpay {
+  if (!razorpayInstance) {
+    razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || '',
+      key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+    });
+  }
+  return razorpayInstance;
+}
 
 // @route   POST /api/auth/signup
 // @desc    Register new user
@@ -333,7 +339,7 @@ router.post('/create-order', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid plan' });
     }
 
-    const order = await razorpayInstance.orders.create({
+    const order = await getRazorpay().orders.create({
       amount,
       currency: 'INR',
       receipt: `plan_${plan}_${Date.now()}`,

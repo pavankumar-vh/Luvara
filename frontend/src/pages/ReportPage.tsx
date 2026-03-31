@@ -4,7 +4,7 @@ import {
   Database, ChevronRight, Search, Download, LayoutGrid, List, Activity, X, Play, Gavel, Bot, ShieldAlert, Scale,
   MessageCircle, ExternalLink, Atom, Box, CheckCircle, TrendingUp, Target, Pill, Zap, Clock, Droplets, GitCompare,
   User, Users, Send, Loader2, BookOpen, ArrowLeft, FlaskConical, DollarSign, FileText, Beaker, Fingerprint, Network,
-  BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon, ChevronDown, Sparkles, AlertTriangle, Share2, Check
+  BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon, ChevronDown, Sparkles, AlertTriangle, Share2, Check, Bookmark
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1450,6 +1450,7 @@ export default function ReportPage() {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [shareState, setShareState] = useState<'idle' | 'loading' | 'copied'>('idle');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [currency, setCurrency] = useState<'USD' | 'INR'>('INR');
   const [structureMode, setStructureMode] = useState<'2d' | '3d'>('2d');
   const [activeSidebar, setActiveSidebar] = useState<'ai' | 'refs' | null>(null);
@@ -1487,6 +1488,7 @@ export default function ReportPage() {
       })
       .then(data => {
         setReport(data);
+        setIsBookmarked(!!data.bookmarked);
         setLoading(false);
       })
       .catch(err => {
@@ -1571,6 +1573,70 @@ export default function ReportPage() {
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const handleExportCsv = () => {
+    if (!report) return;
+    const rows: string[][] = [];
+    // Clinical Trials
+    rows.push(['--- Clinical Trials ---']);
+    rows.push(['NCT ID', 'Title', 'Phase', 'Status', 'Condition']);
+    (report.clinical_data || []).forEach((t: any) => rows.push([t.nctId || t.id || '', t.title || '', t.phase || '', t.status || '', t.condition || '']));
+    rows.push([]);
+    // Repurposing Candidates
+    rows.push(['--- Repurposing Candidates ---']);
+    rows.push(['Condition', 'Max Phase', 'Trial Count', 'Score', 'Market Size ($B)', 'Growth (%)']);
+    (report.repurposing_candidates || []).forEach((c: any) => rows.push([c.condition || '', c.max_phase || '', String(c.trial_count || ''), String(c.repurposing_score || ''), String(c.market_size_usd_billion || ''), String(c.market_growth_pct || '')]));
+    rows.push([]);
+    // Literature
+    rows.push(['--- Publications ---']);
+    rows.push(['Title', 'Journal', 'Year', 'Authors', 'Citations']);
+    (report.literature_data || []).forEach((l: any) => rows.push([l.title || '', l.journal || '', String(l.year || ''), l.authors || '', String(l.citation_count || '')]));
+    rows.push([]);
+    // Patents
+    rows.push(['--- Patents ---']);
+    rows.push(['Title', 'Year', 'Assignee', 'Source']);
+    (report.patent_data || []).forEach((p: any) => rows.push([p.title || '', String(p.year || ''), p.assignee || '', p.source || '']));
+
+    const csvContent = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report.molecule || 'report'}_data.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
+
+  const handleExportJson = () => {
+    if (!report) return;
+    const exportData = {
+      molecule: report.molecule,
+      phoenix_score: report.phoenix_score,
+      viability_score: report.viability_score,
+      phoenix_breakdown: report.phoenix_breakdown,
+      ai_analysis: report.ai_analysis,
+      clinical_data: report.clinical_data,
+      literature_data: report.literature_data,
+      regulatory_data: report.regulatory_data,
+      pubchem_data: report.pubchem_data,
+      target_data: report.target_data,
+      patent_data: report.patent_data,
+      repurposing_candidates: report.repurposing_candidates,
+      market_analysis: report.market_analysis,
+      similar_molecules: report.similar_molecules,
+      debate_data: report.debate_data,
+      created_at: report.created_at,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report.molecule || 'report'}_data.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
   };
 
   const [dynamicRefs, setDynamicRefs] = useState<any[]>([]);
@@ -1756,11 +1822,47 @@ export default function ReportPage() {
                   : <Share2 size={14} />}
                 <span>{shareState === 'copied' ? 'Link Copied!' : 'Share'}</span>
               </button>
-              <button onClick={handleExportPdf} disabled={isExportingPdf}
-                className="flex items-center gap-2 px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-900 rounded-lg transition-colors disabled:opacity-50 border-none text-sm font-medium">
-                {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download className="w-4 h-4" />}
-                <span>Export PDF</span>
+              <button
+                onClick={async () => {
+                  if (!id) return;
+                  try {
+                    const res = await fetch(`/api/collections/${id}/bookmark`, { method: 'POST', credentials: 'include' });
+                    const data = await res.json();
+                    setIsBookmarked(data.bookmarked);
+                  } catch { /* ignore */ }
+                }}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-full transition-colors border text-sm font-medium ${isBookmarked ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400' : 'hover:bg-white/20 text-white border-zinc-700'}`}
+              >
+                <Bookmark size={14} fill={isBookmarked ? 'currentColor' : 'none'} />
+                <span>{isBookmarked ? 'Saved' : 'Save'}</span>
               </button>
+              <div className="relative">
+                <button onClick={() => setShowExportMenu(v => !v)}
+                  className="flex items-center gap-2 px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-900 rounded-lg transition-colors border-none text-sm font-medium">
+                  {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download className="w-4 h-4" />}
+                  <span>Export</span>
+                  <ChevronDown size={12} />
+                </button>
+                {showExportMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/60">
+                      <button onClick={handleExportPdf} disabled={isExportingPdf}
+                        className="w-full text-left px-4 py-3 hover:bg-zinc-900 text-zinc-300 text-sm flex items-center gap-3 transition-colors border-b border-zinc-800/60">
+                        <FileText size={14} className="text-zinc-500" /> Export PDF
+                      </button>
+                      <button onClick={handleExportCsv}
+                        className="w-full text-left px-4 py-3 hover:bg-zinc-900 text-zinc-300 text-sm flex items-center gap-3 transition-colors border-b border-zinc-800/60">
+                        <BarChart3 size={14} className="text-zinc-500" /> Export CSV
+                      </button>
+                      <button onClick={handleExportJson}
+                        className="w-full text-left px-4 py-3 hover:bg-zinc-900 text-zinc-300 text-sm flex items-center gap-3 transition-colors">
+                        <Database size={14} className="text-zinc-500" /> Export JSON
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </header>
 
